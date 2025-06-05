@@ -18,26 +18,49 @@ contract DeployImpactProductStaking is DeploymentConfig {
         
         console.log("Step 3: Deploying ImpactProductStaking...");
         
+        // Safety check: prevent duplicate deployment
+        if (stakingAddress != address(0)) {
+            console.log("ImpactProductStaking already deployed at:", stakingAddress);
+            verifyStakingDeployment();
+            return;
+        }
+        
+        // Verify dependencies are deployed
         require(rebazTokenAddress != address(0), "REBAZToken not deployed");
         require(impactNFTAddress != address(0), "ImpactProductNFT not deployed");
         
-        // if (stakingAddress != address(0)) {
-        //     console.log("ImpactProductStaking already deployed at:", stakingAddress);
-        //     return;
-        // }
+        // Verify dependencies have valid code
+        verifyTokenDeployment();
+        verifyNFTDeployment();
+        
+        console.log("Deploying with parameters:");
+        console.log("  Impact NFT Address:", impactNFTAddress);
+        console.log("  REBAZ Token Address:", rebazTokenAddress);
         
         vm.startBroadcast();
         
         ImpactProductStaking staking = new ImpactProductStaking(impactNFTAddress, rebazTokenAddress);
         stakingAddress = address(staking);
         
+        // Verify deployment was successful
+        require(stakingAddress != address(0), "Deployment failed");
+        require(stakingAddress.code.length > 0, "Contract deployment failed");
+        
         // Grant staking contract permission to mint reward tokens
         REBAZToken rebazToken = REBAZToken(rebazTokenAddress);
         rebazToken.grantRole(MINTER_ROLE, stakingAddress);
         
+        // Verify role was granted successfully
+        require(rebazToken.hasRole(MINTER_ROLE, stakingAddress), "Failed to grant MINTER_ROLE to staking contract");
+        
         vm.stopBroadcast();
         
-        console.log("ImpactProductStaking deployed at:", stakingAddress);
+        console.log("ImpactProductStaking successfully deployed at:", stakingAddress);
+        console.log("MINTER_ROLE granted to staking contract:", rebazToken.hasRole(MINTER_ROLE, stakingAddress));
+        
+        // Verify staking contract can access dependencies
+        require(address(staking.impactProductNFT()) == impactNFTAddress, "NFT address mismatch in staking contract");
+        require(address(staking.rebazToken()) == rebazTokenAddress, "Token address mismatch in staking contract");
         
         // Save updated addresses
         saveDeployedAddresses();

@@ -8,6 +8,14 @@ remappings = [
     "@openzeppelin/=lib/openzeppelin-contracts/"
 ]
 
+# Gas optimization settings
+optimizer = true
+optimizer_runs = 1000
+via_ir = true
+
+# Additional safety settings
+bytecode_hash = "none"
+cbor_metadata = false
 
 [rpc_endpoints]
 default_network = "http://127.0.0.1:8545"
@@ -32,12 +40,9 @@ scroll = "https://rpc.scroll.io"
 pgn = "https://rpc.publicgoods.network"
 pgnTestnet = "https://sepolia.publicgoods.network"
 
-
 [etherscan]
 polygonMumbai = { key = "${ETHERSCAN_API_KEY}" }
 sepolia = { key = "${ETHERSCAN_API_KEY}" }
-
-
 
 [fmt]
 line_length = 120
@@ -45,8 +50,5 @@ tab_width = 4
 quote_style = "double"
 bracket_spacing = true
 int_types = "long"
-
-
-
 
 # See more config options https://book.getfoundry.sh/reference/config/overview
