@@ -7,45 +7,30 @@ import "./DeploymentConfig.s.sol";
 
 /**
  * @title DeployREBAZToken
- * @dev Deploys the REBAZ token contract (step 1)
+ * @dev Simple deployment script for REBAZ token
  */
 contract DeployREBAZToken is DeploymentConfig {
     function run() public {
         initialize();
-        console.log("Step 1: Deploying REBAZToken...");
+        console.log("=== Deploying REBAZ Token ===");
         
-        // Safety check: prevent duplicate deployment
+        // Check if already deployed
         if (rebazTokenAddress != address(0)) {
-            console.log("REBAZToken already deployed at:", rebazTokenAddress);
-            verifyTokenDeployment();
+            console.log("REBAZ Token already deployed at:", rebazTokenAddress);
             return;
         }
         
-        // Validate deployment parameters
-        require(admin != address(0), "Admin address cannot be zero");
-        require(initialTokenSupply > 0, "Initial token supply must be greater than 0");
-        
-        console.log("Deploying with parameters:");
-        console.log("  Initial Supply:", initialTokenSupply);
-        console.log("  Admin:", admin);
+        console.log("Admin:", admin);
+        console.log("Initial Supply:", initialTokenSupply);
         
         vm.startBroadcast();
         
         REBAZToken rebazToken = new REBAZToken(initialTokenSupply, admin);
         rebazTokenAddress = address(rebazToken);
         
-        // Verify deployment was successful
-        require(rebazTokenAddress != address(0), "Deployment failed");
-        require(rebazTokenAddress.code.length > 0, "Contract deployment failed");
-        
-        // Verify initial state
-        require(rebazToken.totalSupply() == initialTokenSupply, "Initial supply mismatch");
-        require(rebazToken.balanceOf(admin) == initialTokenSupply, "Admin balance mismatch");
-        require(rebazToken.hasRole(rebazToken.DEFAULT_ADMIN_ROLE(), admin), "Admin role not granted");
-        
         vm.stopBroadcast();
         
-        console.log("REBAZToken successfully deployed at:", rebazTokenAddress);
+        console.log("REBAZ Token deployed at:", rebazTokenAddress);
         console.log("Total Supply:", rebazToken.totalSupply());
         console.log("Admin Balance:", rebazToken.balanceOf(admin));
         

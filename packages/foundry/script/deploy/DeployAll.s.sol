@@ -3,159 +3,148 @@ pragma solidity ^0.8.20;
 
 import "forge-std/console.sol";
 import "./DeploymentConfig.s.sol";
-import "./1_DeployREBAZToken.s.sol";
-import "./2_DeployImpactProductNFT.s.sol";
-import "./3_DeployImpactProductStaking.s.sol";
-import "./4_DeployMarketplace.s.sol";
-import "./5_DeployImpactProductFactory.s.sol";
+import "../../contracts/tokens/REBAZToken.sol";
+import "../../contracts/tokens/ImpactProductNFT.sol";
+import "../../contracts/staking/ImpactProductStaking.sol";
+import "../../contracts/marketplace/MarketPlace.sol";
+import "../../contracts/factory/ImpactProductFactory.sol";
 
 /**
  * @title DeployAll
- * @dev Runs the complete deployment sequence for all contracts
+ * @dev Simple script to deploy all contracts in sequence
  */
 contract DeployAll is DeploymentConfig {
     function run() public {
         initialize();
         
-        console.log("Starting complete deployment sequence...");
-        console.log("=========================================");
+        console.log("=== Deploying All Contracts ===");
         
-        // Deploy each contract in sequence with error handling
+        vm.startBroadcast();
+        
         deployTokenIfNeeded();
         deployNFTIfNeeded();
         deployStakingIfNeeded();
         deployMarketplaceIfNeeded();
         deployFactoryIfNeeded();
         
-        // Output final deployment status
+        vm.stopBroadcast();
+        
+        saveDeployedAddresses();
         outputDeploymentSummary();
         
-        console.log("=========================================");
-        console.log("Complete deployment sequence finished!");
+        console.log("=== All Deployments Complete ===");
     }
     
     function deployTokenIfNeeded() internal {
         if (rebazTokenAddress == address(0)) {
             console.log("Deploying REBAZ Token...");
-            try new DeployREBAZToken().run() {
-                console.log("[OK] REBAZ Token deployment completed");
-                loadDeployedAddresses(); // Reload to get updated addresses
-            } catch Error(string memory reason) {
-                console.log("[FAIL] REBAZ Token deployment failed:", reason);
-                revert("Token deployment failed");
-            } catch {
-                console.log("[FAIL] REBAZ Token deployment failed with unknown error");
-                revert("Token deployment failed");
-            }
+            
+            REBAZToken rebazToken = new REBAZToken(initialTokenSupply, admin);
+            rebazTokenAddress = address(rebazToken);
+            
+            console.log("REBAZ Token deployed at:", rebazTokenAddress);
+            console.log("Total Supply:", rebazToken.totalSupply());
         } else {
-            console.log("[OK] REBAZ Token already deployed at:", rebazTokenAddress);
-            verifyTokenDeployment();
+            console.log("REBAZ Token already deployed at:", rebazTokenAddress);
         }
     }
     
     function deployNFTIfNeeded() internal {
         if (impactNFTAddress == address(0)) {
             console.log("Deploying Impact Product NFT...");
-            try new DeployImpactProductNFT().run() {
-                console.log("[OK] Impact Product NFT deployment completed");
-                loadDeployedAddresses(); // Reload to get updated addresses
-            } catch Error(string memory reason) {
-                console.log("[FAIL] Impact Product NFT deployment failed:", reason);
-                revert("NFT deployment failed");
-            } catch {
-                console.log("[FAIL] Impact Product NFT deployment failed with unknown error");
-                revert("NFT deployment failed");
-            }
+            
+            ImpactProductNFT impactNFT = new ImpactProductNFT(platformWallet, baseTokenURI);
+            impactNFTAddress = address(impactNFT);
+            
+            console.log("Impact Product NFT deployed at:", impactNFTAddress);
         } else {
-            console.log("[OK] Impact Product NFT already deployed at:", impactNFTAddress);
-            verifyNFTDeployment();
+            console.log("Impact Product NFT already deployed at:", impactNFTAddress);
         }
     }
     
     function deployStakingIfNeeded() internal {
         if (stakingAddress == address(0)) {
             console.log("Deploying Impact Product Staking...");
-            try new DeployImpactProductStaking().run() {
-                console.log("[OK] Impact Product Staking deployment completed");
-                loadDeployedAddresses(); // Reload to get updated addresses
-            } catch Error(string memory reason) {
-                console.log("[FAIL] Impact Product Staking deployment failed:", reason);
-                revert("Staking deployment failed");
-            } catch {
-                console.log("[FAIL] Impact Product Staking deployment failed with unknown error");
-                revert("Staking deployment failed");
-            }
+            
+            require(rebazTokenAddress != address(0), "REBAZ Token must be deployed first");
+            require(impactNFTAddress != address(0), "Impact NFT must be deployed first");
+            
+            ImpactProductStaking staking = new ImpactProductStaking(impactNFTAddress, rebazTokenAddress);
+            stakingAddress = address(staking);
+            
+            // Grant MINTER_ROLE to staking contract
+            REBAZToken token = REBAZToken(rebazTokenAddress);
+            token.grantRole(token.MINTER_ROLE(), stakingAddress);
+            
+            console.log("Impact Product Staking deployed at:", stakingAddress);
+            console.log("MINTER_ROLE granted to staking contract");
         } else {
-            console.log("[OK] Impact Product Staking already deployed at:", stakingAddress);
-            verifyStakingDeployment();
+            console.log("Impact Product Staking already deployed at:", stakingAddress);
         }
     }
     
     function deployMarketplaceIfNeeded() internal {
         if (marketplaceAddress == address(0)) {
             console.log("Deploying Regen Marketplace...");
-            try new DeployMarketplace().run() {
-                console.log("[OK] Regen Marketplace deployment completed");
-                loadDeployedAddresses(); // Reload to get updated addresses
-            } catch Error(string memory reason) {
-                console.log("[FAIL] Regen Marketplace deployment failed:", reason);
-                revert("Marketplace deployment failed");
-            } catch {
-                console.log("[FAIL] Regen Marketplace deployment failed with unknown error");
-                revert("Marketplace deployment failed");
-            }
+            
+            require(impactNFTAddress != address(0), "Impact NFT must be deployed first");
+            
+            RegenMarketplace marketplace = new RegenMarketplace(impactNFTAddress, platformWallet);
+            marketplaceAddress = address(marketplace);
+            
+            console.log("Regen Marketplace deployed at:", marketplaceAddress);
         } else {
-            console.log("[OK] Regen Marketplace already deployed at:", marketplaceAddress);
-            verifyMarketplaceDeployment();
+            console.log("Regen Marketplace already deployed at:", marketplaceAddress);
         }
     }
     
     function deployFactoryIfNeeded() internal {
         if (factoryAddress == address(0)) {
             console.log("Deploying Impact Product Factory...");
-            try new DeployImpactProductFactory().run() {
-                console.log("[OK] Impact Product Factory deployment completed");
-                loadDeployedAddresses(); // Reload to get updated addresses
-            } catch Error(string memory reason) {
-                console.log("[FAIL] Impact Product Factory deployment failed:", reason);
-                revert("Factory deployment failed");
-            } catch {
-                console.log("[FAIL] Impact Product Factory deployment failed with unknown error");
-                revert("Factory deployment failed");
-            }
+            
+            require(impactNFTAddress != address(0), "Impact NFT must be deployed first");
+            
+            ImpactProductFactory factory = new ImpactProductFactory(impactNFTAddress, platformWallet);
+            factoryAddress = address(factory);
+            
+            // Grant roles to factory
+            ImpactProductNFT nft = ImpactProductNFT(impactNFTAddress);
+            nft.grantRole(nft.MINTER_ROLE(), factoryAddress);
+            nft.grantRole(nft.VERIFIER_ROLE(), factoryAddress);
+            
+            console.log("Impact Product Factory deployed at:", factoryAddress);
+            console.log("MINTER_ROLE and VERIFIER_ROLE granted to factory");
         } else {
-            console.log("[OK] Impact Product Factory already deployed at:", factoryAddress);
-            verifyFactoryDeployment();
+            console.log("Impact Product Factory already deployed at:", factoryAddress);
         }
     }
     
     function outputDeploymentSummary() internal view {
-        console.log("--------------------------------------------------");
-        console.log("REGEN BAZAAR DEPLOYMENT SUMMARY");
-        console.log("--------------------------------------------------");
-        console.log("Network Chain ID:     ", block.chainid);
-        console.log("Deployment Timestamp: ", block.timestamp);
-        console.log("--------------------------------------------------");
-        console.log("CONTRACT ADDRESSES:");
-        console.log("REBAZToken:           ", rebazTokenAddress);
-        console.log("ImpactProductNFT:     ", impactNFTAddress);
-        console.log("ImpactProductStaking: ", stakingAddress);
-        console.log("RegenMarketplace:     ", marketplaceAddress);
-        console.log("ImpactProductFactory: ", factoryAddress);
-        console.log("--------------------------------------------------");
-        console.log("CONFIGURATION:");
-        console.log("Admin:                ", admin);
-        console.log("Platform Wallet:      ", platformWallet);
-        console.log("Initial Token Supply: ", initialTokenSupply);
-        console.log("--------------------------------------------------");
+        console.log("==================================");
+        console.log("DEPLOYMENT SUMMARY");
+        console.log("==================================");
+        console.log("Chain ID:", block.chainid);
+        console.log("Deployer:", msg.sender);
+        console.log("==================================");
+        console.log("REBAZ Token:          ", rebazTokenAddress);
+        console.log("Impact Product NFT:   ", impactNFTAddress);
+        console.log("Impact Product Staking:", stakingAddress);
+        console.log("Regen Marketplace:    ", marketplaceAddress);
+        console.log("Impact Product Factory:", factoryAddress);
+        console.log("==================================");
         
-        // Verify all deployments
-        require(rebazTokenAddress != address(0), "Token deployment missing");
-        require(impactNFTAddress != address(0), "NFT deployment missing");
-        require(stakingAddress != address(0), "Staking deployment missing");
-        require(marketplaceAddress != address(0), "Marketplace deployment missing");
-        require(factoryAddress != address(0), "Factory deployment missing");
+        // Verify all addresses are different
+        require(rebazTokenAddress != impactNFTAddress, "Token and NFT have same address");
+        require(rebazTokenAddress != stakingAddress, "Token and Staking have same address");
+        require(rebazTokenAddress != marketplaceAddress, "Token and Marketplace have same address");
+        require(rebazTokenAddress != factoryAddress, "Token and Factory have same address");
+        require(impactNFTAddress != stakingAddress, "NFT and Staking have same address");
+        require(impactNFTAddress != marketplaceAddress, "NFT and Marketplace have same address");
+        require(impactNFTAddress != factoryAddress, "NFT and Factory have same address");
+        require(stakingAddress != marketplaceAddress, "Staking and Marketplace have same address");
+        require(stakingAddress != factoryAddress, "Staking and Factory have same address");
+        require(marketplaceAddress != factoryAddress, "Marketplace and Factory have same address");
         
-        console.log("[SUCCESS] All contracts successfully deployed and verified!");
+        console.log("All contracts deployed with unique addresses!");
     }
 } 

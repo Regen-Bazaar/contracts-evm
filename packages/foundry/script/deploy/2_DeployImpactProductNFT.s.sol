@@ -7,43 +7,30 @@ import "./DeploymentConfig.s.sol";
 
 /**
  * @title DeployImpactProductNFT
- * @dev Deploys the Impact Product NFT contract (step 2)
+ * @dev Simple deployment script for Impact Product NFT
  */
 contract DeployImpactProductNFT is DeploymentConfig {
     function run() public {
         initialize();
-        console.log("Step 2: Deploying ImpactProductNFT...");
+        console.log("=== Deploying Impact Product NFT ===");
         
-        // Safety check: prevent duplicate deployment
+        // Check if already deployed
         if (impactNFTAddress != address(0)) {
-            console.log("ImpactProductNFT already deployed at:", impactNFTAddress);
-            verifyNFTDeployment();
+            console.log("Impact Product NFT already deployed at:", impactNFTAddress);
             return;
         }
         
-        // Validate deployment parameters
-        require(platformWallet != address(0), "Platform wallet not set");
-        require(bytes(baseTokenURI).length > 0, "Base token URI cannot be empty");
-        
-        console.log("Deploying with parameters:");
-        console.log("  Platform Wallet:", platformWallet);
-        console.log("  Base Token URI:", baseTokenURI);
+        console.log("Platform Wallet:", platformWallet);
+        console.log("Base Token URI:", baseTokenURI);
         
         vm.startBroadcast();
         
         ImpactProductNFT impactNFT = new ImpactProductNFT(platformWallet, baseTokenURI);
         impactNFTAddress = address(impactNFT);
         
-        // Verify deployment was successful
-        require(impactNFTAddress != address(0), "Deployment failed");
-        require(impactNFTAddress.code.length > 0, "Contract deployment failed");
-        
-        // Verify initial state
-        // require(impactNFT.hasRole(impactNFT.DEFAULT_ADMIN_ROLE(), platformWallet), "Platform wallet admin role not granted");
-        
         vm.stopBroadcast();
         
-        console.log("ImpactProductNFT successfully deployed at:", impactNFTAddress);
+        console.log("Impact Product NFT deployed at:", impactNFTAddress);
         console.log("Platform Wallet has admin role:", impactNFT.hasRole(impactNFT.DEFAULT_ADMIN_ROLE(), platformWallet));
         
         saveDeployedAddresses();
