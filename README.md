@@ -53,45 +53,72 @@ forge install OpenZeppelin/openzeppelin-contracts --no-commit
 # Build contracts
 forge compile
 ```
-### 4 Local Deployment with Anvil & Foundry
-#### 4.1 Start Anvil ( Local Ethereum Blokchain node)
+
+## 4. Contract Deployment
+
+There are several ways to deploy the contracts:
+
+### Option 1: Deploy All Contracts at Once (Recommended)
+
+This is the easiest way to deploy all contracts with proper nonce sequencing:
+
 ```bash
-# Open a new terminal and run:
-anvil --block-time 5
-# This will start the local blockchain with a block time of 5 seconds
+cd packages/foundry
+
+# Clean up any previous deployments (optional)
+rm -f addresses.json
+rm -rf broadcast/
+
+# Deploy all contracts with a local anvil instance
+./script/deploy_with_anvil.sh
 ```
-#### 4.2 Set up environment
+
+This script will:
+1. Start a local Anvil blockchain
+2. Deploy all contracts in sequence with proper nonce management
+3. Display the deployed addresses
+4. Save addresses to `addresses.json`
+5. Shut down Anvil when done
+
+### Option 2: Deploy Individual Contracts
+
+If you need more control, you can deploy contracts individually:
+
 ```bash
-# Open a new terminal and run:
-cd regenbazaar/packages/foundry
+cd packages/foundry
+
+# Deploy specific contracts (1-5)
+./script/deploy/deploy.sh 1    # Deploy REBAZ Token
+./script/deploy/deploy.sh 2    # Deploy Impact NFT
+./script/deploy/deploy.sh 3    # Deploy Staking
+./script/deploy/deploy.sh 4    # Deploy Marketplace
+./script/deploy/deploy.sh 5    # Deploy Factory
+
+# Or deploy all contracts in sequence
+./script/deploy/deploy.sh all
 ```
-#### 4.3 Set Private Key For Deployment
+
+### Option 3: Deploy to a Testnet or Mainnet
+
 ```bash
-# Export the first Anvil account’s private key (this is always the same for local Anvil):
-export PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+cd packages/foundry
+
+# Deploy all contracts to a testnet (e.g., Sepolia)
+./script/deploy/deploy.sh --rpc=https://sepolia.infura.io/v3/YOUR_API_KEY all
+
+# Or deploy individual contracts
+./script/deploy/deploy.sh --rpc=https://sepolia.infura.io/v3/YOUR_API_KEY 1
 ```
-#### 4.4 Deploy Contracts
-```bash
-# Run each command one by one, waiting for each to finish:
 
-# 1. Deploy REBAZToken
-forge script script/deploy/1_DeployREBAZToken.s.sol:DeployREBAZToken --rpc-url http://localhost:8545 --private-key $PRIVATE_KEY --broadcast
+### Verifying Successful Deployment
 
-# 2. Deploy ImpactProductNFT
-forge script script/deploy/2_DeployImpactProductNFT.s.sol:DeployImpactProductNFT --rpc-url http://localhost:8545 --private-key $PRIVATE_KEY --broadcast
+After deployment, you can verify success by:
 
-# 3. Deploy ImpactProductStaking
-forge script script/deploy/3_DeployImpactProductStaking.s.sol:DeployImpactProductStaking --rpc-url http://localhost:8545 --private-key $PRIVATE_KEY --broadcast
+1. Check the `addresses.json` file for unique contract addresses
+2. Ensure each contract has a different address
+3. Verify the addresses match the logs shown during deployment
 
-# 4. Deploy RegenMarketplace
-forge script script/deploy/4_DeployMarketplace.s.sol:DeployMarketplace --rpc-url http://localhost:8545 --private-key $PRIVATE_KEY --broadcast
-
-# 5. Deploy ImpactProductFactory
-forge script script/deploy/5_DeployImpactProductFactory.s.sol:DeployImpactProductFactory --rpc-url http://localhost:8545 --private-key $PRIVATE_KEY --broadcast
-```
-#### 4.5 Check Deployment Output 
-Each deployment will print the contract address and status to your terminal.
-You can also check `deployments/addresses.json` for all deployed addresses.
+The deployment is successful if all contracts have unique addresses and no errors occurred.
 
 ## Contract Structure
 
@@ -139,6 +166,11 @@ forge install OpenZeppelin/openzeppelin-contracts --no-commit
   @openzeppelin/=lib/openzeppelin-contracts/
   forge-std/=lib/forge-std/src/
   ```
+
+### Deployment Issues
+- **Same contract addresses**: This happens when nonces aren't properly sequenced. Use the `deploy_with_anvil.sh` script or `deploy.sh all` to ensure proper sequencing.
+- **Anvil connection errors**: Check if Anvil is running on port 8545 and not being used by another process.
+- **Missing addresses.json**: Make sure you have write permissions in the directory.
 
 ### Linearization errors
 When using multiple ERC721 extensions, put the more-specific contract first in the `is` list:
