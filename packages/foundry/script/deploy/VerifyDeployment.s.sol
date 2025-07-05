@@ -3,11 +3,11 @@ pragma solidity ^0.8.20;
 
 import "forge-std/console.sol";
 import "./DeploymentConfig.s.sol";
-import "../../contracts/tokens/REBAZToken.sol";
-import "../../contracts/tokens/ImpactProductNFT.sol";
-import "../../contracts/staking/ImpactProductStaking.sol";
-import "../../contracts/marketplace/MarketPlace.sol";
-import "../../contracts/factory/ImpactProductFactory.sol";
+import "contracts/tokens/REBAZToken.sol";
+import "contracts/tokens/ImpactProductNFT.sol";
+import "contracts/staking/ImpactProductStaking.sol";
+import "contracts/marketplace/MarketPlace.sol";
+import "contracts/factory/ImpactProductFactory.sol";
 
 /**
  * @title VerifyDeployment

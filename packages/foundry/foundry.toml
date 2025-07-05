@@ -39,10 +39,14 @@ scrollSepolia = "https://sepolia-rpc.scroll.io"
 scroll = "https://rpc.scroll.io"
 pgn = "https://rpc.publicgoods.network"
 pgnTestnet = "https://sepolia.publicgoods.network"
+celo = "https://forno.celo.org"
+alfajores = "https://alfajores-forno.celo-testnet.org"
 
 [etherscan]
 polygonMumbai = { key = "${ETHERSCAN_API_KEY}" }
 sepolia = { key = "${ETHERSCAN_API_KEY}" }
+alfajores = { key = "${CELOSCAN_API_KEY}" }
+celo = { key = "${CELOSCAN_API_KEY}" }
 
 [fmt]
 line_length = 120

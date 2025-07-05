@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/console.sol";
-import "../../contracts/marketplace/MarketPlace.sol";
+import "contracts/marketplace/MarketPlace.sol";
 import "./DeploymentConfig.s.sol";
 
 /**
