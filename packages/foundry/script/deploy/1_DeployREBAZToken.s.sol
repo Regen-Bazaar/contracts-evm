@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/console.sol";
-import "../../contracts/tokens/REBAZToken.sol";
+import "contracts/tokens/REBAZToken.sol";
 import "./DeploymentConfig.s.sol";
 
 /**
